@@ -5,6 +5,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\{DashboardController, UserController, GroupController, ModuleController, SessionController, AbsenceController, JustificationController, StatisticController, SettingController};
 use App\Http\Controllers\Teacher\{DashboardController as TeacherDashboard, ScheduleController, AttendanceController, ModuleController as TeacherModuleController, ReportController};
 use App\Http\Controllers\Student\{DashboardController as StudentDashboard, AbsenceController as StudentAbsenceController, JustificationController as StudentJustificationController, ScheduleController as StudentScheduleController, ProfileController, NotificationController};
+use Illuminate\Support\Facades\Auth;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -17,23 +20,22 @@ use App\Http\Controllers\Student\{DashboardController as StudentDashboard, Absen
 */
 
 // Public routes
-Route::get('/', function () {
+Route::get('/', function (){
     return redirect()->route('login');
 });
 
 // Authentication routes
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
-    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'reset'])->name('password.update');
+    Route::get('/login', [App\Http\Controllers\Auth\AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [App\Http\Controllers\Auth\AuthController::class, 'login']);
+    Route::get('/forgot-password', [App\Http\Controllers\Auth\AuthController::class, 'showForgotPasswordForm'])->name('password.request');
+    Route::post('/forgot-password', [App\Http\Controllers\Auth\AuthController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('/reset-password/{token}', [App\Http\Controllers\Auth\AuthController::class, 'showResetPasswordForm'])->name('password.reset');
+    Route::post('/reset-password', [App\Http\Controllers\Auth\AuthController::class, 'reset'])->name('password.update');
 });
 
 // Logout route (accessible to all authenticated users)
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
+Route::post('/logout', [App\Http\Controllers\Auth\AuthController::class, 'logout'])->name('logout');
 // Admin routes (all require admin role)
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
@@ -155,5 +157,8 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
 // Common routes (accessible to all authenticated users)
 Route::middleware('auth')->group(function () {
     // Profile update (common for all roles)
-    Route::put('/profile/update', [AuthController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/profile/update', [App\Http\Controllers\Auth\AuthController::class, 'updateProfile'])->name('profile.update');
 });
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

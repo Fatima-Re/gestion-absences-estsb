@@ -15,7 +15,7 @@ class AbsenceController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $student = $user->student;
         
         $query = Absence::where('student_id', $student->id)
@@ -47,9 +47,9 @@ class AbsenceController extends Controller
     /**
      * Display attendance statistics by module
      */
-    public function statistics()
+    public function statistics(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $student = $user->student;
         $modules = $student->group->modules;
         
@@ -100,7 +100,7 @@ class AbsenceController extends Controller
             'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);
         
-        $user = auth()->user();
+        $user = $request->user();
         $student = $user->student;
         
         $dateFrom = $request->date_from ?: now()->subYear();

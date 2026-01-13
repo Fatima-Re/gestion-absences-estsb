@@ -8,19 +8,8 @@ use App\Models\Absence;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-// For Excel exports
-use Maatwebsite\Excel\Facades\Excel;
-
-// For PDF exports
-use Barryvdh\DomPDF\Facade\Pdf;
-
-// Your export classes
-use App\Exports\AbsencesExport;
-use App\Exports\AttendanceExport;
-use App\Exports\StatisticsExport;
-use App\Exports\StudentsExport;
-use App\Exports\ReportExport;
-use Symfony\Component\HttpFoundation\StreamedResponse;      
+use Illuminate\Support\Facades\Auth;
+   
 
 
 class JustificationController extends Controller
@@ -79,7 +68,7 @@ class JustificationController extends Controller
             abort(404, 'Fichier non trouvé.');
         }
         
-        return Storage::disk('public')->download($justification->file_path, $justification->file_name);
+        return response()->download(Storage::disk('public')->path($justification->file_path), $justification->file_name);
     }
 
     /**
@@ -116,7 +105,7 @@ class JustificationController extends Controller
         // Update justification status
         $justification->update([
             'status' => Justification::STATUS_APPROVED,
-            'validated_by' => auth()->id(),
+           'validated_by' => Auth::id(),
             'validation_date' => now(),
             'comments' => $comments,
         ]);
@@ -149,7 +138,7 @@ class JustificationController extends Controller
         // Update justification status
         $justification->update([
             'status' => Justification::STATUS_REJECTED,
-            'validated_by' => auth()->id(),
+             'validated_by' => Auth::id(),
             'validation_date' => now(),
             'rejection_reason' => $rejectionReason,
         ]);

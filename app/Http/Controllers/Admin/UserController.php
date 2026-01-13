@@ -10,6 +10,7 @@ use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -195,7 +196,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         // Prevent self-deletion
-        if ($user->id === auth()->id()) {
+        if ($user->id ===  Auth::id()) {
             return back()->withErrors(['Vous ne pouvez pas supprimer votre propre compte.']);
         }
         
@@ -224,7 +225,7 @@ class UserController extends Controller
     public function toggleStatus(User $user)
     {
         // Prevent self-deactivation
-        if ($user->id === auth()->id()) {
+        if ($user->id ===  Auth::id()) {
             return back()->withErrors(['Vous ne pouvez pas désactiver votre propre compte.']);
         }
         
