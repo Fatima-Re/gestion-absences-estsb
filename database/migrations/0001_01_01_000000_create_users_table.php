@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('password');
             $table->enum('role', ['admin', 'teacher', 'student'])->default('student');
             $table->boolean('is_active')->default(true);
+            $table->string('phone')->nullable();
             $table->string('avatar')->nullable();
             $table->rememberToken();
             $table->timestamps();

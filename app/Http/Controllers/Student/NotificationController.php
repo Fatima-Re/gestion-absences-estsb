@@ -120,43 +120,12 @@ class NotificationController extends Controller
     }
 
     /**
-     * Update notification preferences
-     */
-    public function updatePreferences(Request $request)
-    {
-        $student = Auth::user()->student;
-        
-        $request->validate([
-            'email_notifications' => 'boolean',
-            'push_notifications' => 'boolean',
-            'absence_alerts' => 'boolean',
-            'justification_updates' => 'boolean',
-            'session_cancellations' => 'boolean',
-        ]);
-        
-        // Store preferences in user settings or separate table
-        // For now, we'll store in a JSON field in the student table
-        $preferences = [
-            'email' => $request->boolean('email_notifications', true),
-            'push' => $request->boolean('push_notifications', true),
-            'absence_alerts' => $request->boolean('absence_alerts', true),
-            'justification_updates' => $request->boolean('justification_updates', true),
-            'session_cancellations' => $request->boolean('session_cancellations', true),
-        ];
-        
-        // If you have a settings field in student model
-        // $student->update(['notification_preferences' => json_encode($preferences)]);
-        
-        return back()->with('success', 'Préférences de notification mises à jour.');
-    }
-
-    /**
      * Show notification preferences form
      */
     public function preferences()
     {
         $student = Auth::user()->student;
-        
+
         // Get current preferences
         $preferences = [
             'email_notifications' => true,
@@ -165,14 +134,16 @@ class NotificationController extends Controller
             'justification_updates' => true,
             'session_cancellations' => true,
         ];
-        
+
         // If stored in database, decode them
         // if ($student->notification_preferences) {
         //     $preferences = json_decode($student->notification_preferences, true);
         // }
-        
+
         return view('student.notifications.preferences', compact('preferences'));
     }
+
+
 
     /**
      * Verify notification ownership

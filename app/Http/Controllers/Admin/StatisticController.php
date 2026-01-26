@@ -63,7 +63,7 @@ class StatisticController extends Controller
     private function calculateStatistics($dateFrom, $dateTo, $request = null)
     {
         // Base queries with date filter
-        $baseSessionQuery = CourseSession::whereBetween('date', [$dateFrom, $dateTo]);
+        $baseSessionQuery = CourseSession::whereBetween('start_time', [$dateFrom, $dateTo]);
         $baseAbsenceQuery = Absence::whereBetween('created_at', [$dateFrom, $dateTo]);
         
         // Apply additional filters
@@ -96,12 +96,12 @@ class StatisticController extends Controller
         // Module-wise statistics
         $moduleStats = Module::active()->get()->map(function($module) use ($dateFrom, $dateTo) {
             $moduleSessions = CourseSession::where('module_id', $module->id)
-                ->whereBetween('date', [$dateFrom, $dateTo])
+                ->whereBetween('start_time', [$dateFrom, $dateTo])
                 ->count();
-            
+
             $moduleAbsences = Absence::whereHas('session', function($q) use ($module, $dateFrom, $dateTo) {
                     $q->where('module_id', $module->id)
-                      ->whereBetween('date', [$dateFrom, $dateTo]);
+                      ->whereBetween('start_time', [$dateFrom, $dateTo]);
                 })
                 ->count();
             
@@ -126,12 +126,12 @@ class StatisticController extends Controller
         // Group-wise statistics
         $groupStats = Group::active()->get()->map(function($group) use ($dateFrom, $dateTo) {
             $groupSessions = CourseSession::where('group_id', $group->id)
-                ->whereBetween('date', [$dateFrom, $dateTo])
+                ->whereBetween('start_time', [$dateFrom, $dateTo])
                 ->count();
-            
+
             $groupAbsences = Absence::whereHas('session', function($q) use ($group, $dateFrom, $dateTo) {
                     $q->where('group_id', $group->id)
-                      ->whereBetween('date', [$dateFrom, $dateTo]);
+                      ->whereBetween('start_time', [$dateFrom, $dateTo]);
                 })
                 ->count();
             
@@ -160,22 +160,22 @@ class StatisticController extends Controller
             ->get();
         
         // Daily trend
-        $dailyTrend = CourseSession::whereBetween('date', [$dateFrom, $dateTo])
-            ->selectRaw('date, COUNT(*) as sessions')
+        $dailyTrend = CourseSession::whereBetween('start_time', [$dateFrom, $dateTo])
+            ->selectRaw('DATE(start_time) as date, COUNT(*) as sessions')
             ->groupBy('date')
             ->orderBy('date')
             ->get()
             ->map(function($item) use ($dateFrom, $dateTo) {
                 $absences = Absence::whereHas('session', function($q) use ($item) {
-                        $q->where('date', $item->date);
+                        $q->whereRaw('DATE(start_time) = ?', [$item->date]);
                     })
                     ->count();
-                
+
                 $sessions = $item->sessions;
                 $students = Student::count();
                 $expected = $sessions * $students;
                 $rate = $expected > 0 ? (($expected - $absences) / $expected) * 100 : 0;
-                
+
                 return [
                     'date' => $item->date,
                     'sessions' => $sessions,
@@ -185,22 +185,22 @@ class StatisticController extends Controller
             });
         
         // Weekly trend
-        $weeklyTrend = CourseSession::whereBetween('date', [$dateFrom, $dateTo])
-            ->selectRaw('YEARWEEK(date, 1) as week, COUNT(*) as sessions')
+        $weeklyTrend = CourseSession::whereBetween('start_time', [$dateFrom, $dateTo])
+            ->selectRaw('YEARWEEK(start_time, 1) as week, COUNT(*) as sessions')
             ->groupBy('week')
             ->orderBy('week')
             ->get()
             ->map(function($item) use ($dateFrom, $dateTo) {
                 $absences = Absence::whereHas('session', function($q) use ($item) {
-                        $q->whereRaw('YEARWEEK(date, 1) = ?', [$item->week]);
+                        $q->whereRaw('YEARWEEK(start_time, 1) = ?', [$item->week]);
                     })
                     ->count();
-                
+
                 $sessions = $item->sessions;
                 $students = Student::count();
                 $expected = $sessions * $students;
                 $rate = $expected > 0 ? (($expected - $absences) / $expected) * 100 : 0;
-                
+
                 return [
                     'week' => $item->week,
                     'sessions' => $sessions,

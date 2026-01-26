@@ -1,59 +1,231 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Gestion des Absences ESTSB
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Une application web complète de gestion des absences pour l'École Supérieure de Technologie de Sidi Bennour (EST-SB), développée avec Laravel 12.
 
-## About Laravel
+## 🚀 Fonctionnalités
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Pour les Administrateurs
+- ✅ Gestion complète des utilisateurs (étudiants, enseignants)
+- ✅ Gestion des groupes et modules
+- ✅ Gestion des séances de cours
+- ✅ Consultation et export des absences
+- ✅ Gestion des justifications d'absence
+- ✅ Statistiques et rapports détaillés
+- ✅ Configuration système
+- ✅ Import/Export des données
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Pour les Enseignants
+- ✅ Consultation de l'emploi du temps
+- ✅ Prise de présence en temps réel
+- ✅ Gestion des absences et justifications
+- ✅ Génération de rapports par module
+- ✅ Suivi statistique des présences
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Pour les Étudiants
+- ✅ Consultation des absences personnelles
+- ✅ Soumission de justifications avec pièces jointes
+- ✅ Suivi de l'assiduité par module
+- ✅ Téléchargement de relevés d'absence
+- ✅ Gestion des notifications
 
-## Learning Laravel
+## 🛠️ Technologies Utilisées
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- **Backend**: Laravel 12 (PHP 8.2+)
+- **Base de données**: MySQL
+- **Frontend**: Bootstrap 5, jQuery, CSS3
+- **Exports**: Laravel Excel (XLSX), DOMPDF (PDF)
+- **Authentification**: Middleware personnalisé par rôles
+- **Architecture**: MVC avec repositories et services
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 📋 Prérequis
 
-## Laravel Sponsors
+- PHP 8.2 ou supérieur
+- Composer
+- MySQL 5.7+
+- Node.js & npm (pour les assets)
+- XAMPP/WAMP ou serveur web équivalent
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🔧 Installation
 
-### Premium Partners
+### 1. Clonage du projet
+```bash
+git clone https://github.com/Fatima-Re/gestion-absences-estsb.git
+cd gestion-absences-estsb
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2. Installation des dépendances
+```bash
+composer install
+npm install
+```
 
-## Contributing
+### 3. Configuration de l'environnement
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 4. Configuration de la base de données
+Modifiez le fichier `.env` :
+```env
+DB_CONNECTION=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=gestion_absences-estsb
+DB_USERNAME=votre_username
+DB_PASSWORD=votre_password
+```
 
-## Code of Conduct
+### 5. Migration et seeding
+```bash
+php artisan migrate
+php artisan db:seed
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 6. Compilation des assets
+```bash
+npm run build
+# ou pour le développement
+npm run dev
+```
 
-## Security Vulnerabilities
+### 7. Démarrage du serveur
+```bash
+php artisan serve
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+L'application sera accessible sur `http://localhost:8000`
 
-## License
+## 👥 Comptes de démonstration
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Après le seeding, les comptes suivants sont disponibles :
+
+### Administrateur
+- **Email**: admin@estsb.ma
+- **Mot de passe**: admin123
+
+### Enseignants
+- **Dr. Fatima Alaoui**: fatima.alaoui@estsb.ma / teacher123
+- **Pr. Mohamed Bennani**: mohamed.bennani@estsb.ma / teacher123
+- **Dr. Rachid Tazi**: rachid.tazi@estsb.ma / teacher123
+
+### Étudiants
+- **Ahmed Bennani**: ahmed.bennani@estsb.ma / student123
+- **Sara Alaoui**: sara.alaoui@estsb.ma / student123
+- **Youssef Tazi**: youssef.tazi@estsb.ma / student123
+- **Fatima Zahra**: fatima.zahra@estsb.ma / student123
+
+## 📁 Structure du Projet
+
+```
+gestion-absences-estsb/
+├── app/
+│   ├── Http/Controllers/
+│   │   ├── Admin/          # Contrôleurs administrateur
+│   │   ├── Teacher/        # Contrôleurs enseignant
+│   │   ├── Student/        # Contrôleurs étudiant
+│   │   └── Auth/           # Authentification
+│   ├── Models/             # Modèles Eloquent
+│   ├── Exports/            # Classes d'export Excel
+│   └── Providers/          # Service providers
+├── database/
+│   ├── migrations/         # Migrations base de données
+│   └── seeders/           # Seeders de données
+├── public/                 # Assets publics
+├── resources/
+│   ├── views/             # Templates Blade
+│   │   ├── admin/         # Vues administrateur
+│   │   ├── teacher/       # Vues enseignant
+│   │   ├── student/       # Vues étudiant
+│   │   ├── layouts/       # Layouts principaux
+│   │   └── partials/      # Composants réutilisables
+│   ├── css/               # Styles personnalisés
+│   └── js/                # JavaScript
+├── routes/
+│   └── web.php            # Routes de l'application
+└── tests/                 # Tests unitaires et fonctionnels
+```
+
+## 🎯 Utilisation
+
+### Gestion des Utilisateurs (Admin)
+1. Accédez à l'espace administrateur
+2. Allez dans "Utilisateurs" > "Gérer les utilisateurs"
+3. Créez, modifiez ou désactivez des comptes
+4. Utilisez l'import en masse pour ajouter plusieurs étudiants
+
+### Prise de Présence (Enseignant)
+1. Consultez votre emploi du temps
+2. Cliquez sur une séance pour prendre la présence
+3. Marquez les étudiants présents/absents
+4. Modifiez si nécessaire avant la deadline
+
+### Consultation des Absences (Étudiant)
+1. Accédez à votre tableau de bord étudiant
+2. Consultez vos absences par module
+3. Soumettez des justifications avec documents
+4. Téléchargez vos relevés d'absence
+
+## 📊 Exports et Rapports
+
+L'application supporte plusieurs formats d'export :
+
+- **Excel (.xlsx)**: Listes d'étudiants, rapports d'absence
+- **PDF**: Relevés individuels, statistiques
+- **JSON**: Sauvegarde des paramètres système
+
+## 🔒 Sécurité
+
+- Authentification basée sur les rôles
+- Middleware de protection des routes
+- Validation des données côté serveur
+- Protection CSRF sur tous les formulaires
+- Mots de passe hashés avec bcrypt
+
+## 🧪 Tests
+
+```bash
+# Exécuter tous les tests
+php artisan test
+
+# Tests avec couverture
+php artisan test --coverage
+```
+
+## 📝 API Documentation
+
+Les routes API principales :
+
+```
+GET    /api/users              # Liste des utilisateurs (Admin)
+POST   /api/attendance         # Enregistrer présence (Teacher)
+GET    /api/absences/{user}    # Absences d'un utilisateur (Student)
+POST   /api/justifications     # Soumettre justification (Student)
+```
+
+## 🤝 Contribution
+
+1. Fork le projet
+2. Créez une branche feature (`git checkout -b feature/AmazingFeature`)
+3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Pushez vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
+
+## 📄 Licence
+
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+## 👨‍💻 Développeurs
+
+- **Fatima Ezzahra REBBOUH** - *Développement initial* - [Fatima-Re](https://github.com/Fatima-Re)
+- **Encadrant**: Badreddine CHERKAOUI
+
+## 🙏 Remerciements
+
+- École Supérieure de Technologie de Sidi Bennour
+- Framework Laravel
+- Communauté open source
+
+---
+
+**Note**: Cette application est développée dans le cadre d'un projet de fin d'études (PFE) et est destinée à un usage éducatif.

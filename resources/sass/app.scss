@@ -6,3 +6,12 @@
 
 // Bootstrap
 @import 'bootstrap/scss/bootstrap';
+
+// Custom CSS Variables
+:root {
+    --primary-color-1: #055571;
+    --primary-color-2: #077aa2;
+    --secondary-color-1: #712105;
+    --secondary-color-2: #f1f1f1;
+    --secondary-color-3: #a7a29d;
+}

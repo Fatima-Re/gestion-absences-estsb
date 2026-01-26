@@ -27,7 +27,7 @@ class DashboardController extends Controller
             'modules_count' => Module::active()->count(),
             'absences_today' => Absence::whereDate('created_at', today())->count(),
             'pending_justifications' => Justification::pending()->count(),
-            'sessions_today' => CourseSession::whereDate('date', today())->count(),
+            'sessions_today' => CourseSession::whereDate('start_time', today())->count(),
         ];
 
         // Get recent absences for the table

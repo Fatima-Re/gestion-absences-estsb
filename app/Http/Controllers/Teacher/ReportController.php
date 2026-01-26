@@ -58,7 +58,7 @@ class ReportController extends Controller
         // Build query for sessions
         $query = CourseSession::where('module_id', $module->id)
             ->where('teacher_id', $teacher->id)
-            ->whereBetween('date', [$request->date_from, $request->date_to]);
+            ->whereBetween('start_time', [$request->date_from, $request->date_to]);
         
         // Filter by group if specified
         if ($request->filled('group_id')) {
@@ -98,7 +98,7 @@ class ReportController extends Controller
         // Get sessions
         $sessions = CourseSession::where('module_id', $module->id)
             ->where('teacher_id', $teacher->id)
-            ->whereBetween('date', [$dateFrom, $dateTo])
+            ->whereBetween('start_time', [$dateFrom, $dateTo])
             ->with(['group', 'attendanceRecords'])
             ->get();
         
@@ -166,14 +166,14 @@ class ReportController extends Controller
                 $q->whereHas('session', function($q2) use ($module, $teacher, $params) {
                     $q2->where('module_id', $module->id)
                        ->where('teacher_id', $teacher->id)
-                       ->whereBetween('date', [$params['date_from'], $params['date_to']]);
+                       ->whereBetween('start_time', [$params['date_from'], $params['date_to']]);
                 });
             })
             ->withCount(['absences' => function($q) use ($module, $teacher, $params) {
                 $q->whereHas('session', function($q2) use ($module, $teacher, $params) {
                     $q2->where('module_id', $module->id)
                        ->where('teacher_id', $teacher->id)
-                       ->whereBetween('date', [$params['date_from'], $params['date_to']]);
+                       ->whereBetween('start_time', [$params['date_from'], $params['date_to']]);
                 });
             }])
             ->orderBy('absences_count', 'desc')
@@ -186,25 +186,27 @@ class ReportController extends Controller
         $endDate = \Carbon\Carbon::parse($params['date_to']);
         
         while ($currentDate <= $endDate) {
-            $dateSessions = $sessions->where('date', $currentDate->format('Y-m-d'));
+            $dateSessions = $sessions->filter(function($session) use ($currentDate) {
+                return \Carbon\Carbon::parse($session->start_time)->toDateString() === $currentDate->toDateString();
+            });
             $datePresent = 0;
             $dateAbsent = 0;
-            
+
             foreach ($dateSessions as $session) {
                 $datePresent += $session->attendanceRecords->where('status', 'present')->count();
                 $dateAbsent += $session->attendanceRecords->where('status', 'absent')->count();
             }
-            
+
             $dailyTrend[] = [
                 'date' => $currentDate->format('Y-m-d'),
                 'sessions' => $dateSessions->count(),
                 'present' => $datePresent,
                 'absent' => $dateAbsent,
-                'attendance_rate' => ($datePresent + $dateAbsent) > 0 
-                    ? ($datePresent / ($datePresent + $dateAbsent)) * 100 
+                'attendance_rate' => ($datePresent + $dateAbsent) > 0
+                    ? ($datePresent / ($datePresent + $dateAbsent)) * 100
                     : 0,
             ];
-            
+
             $currentDate->addDay();
         }
         
@@ -249,5 +251,121 @@ class ReportController extends Controller
     {
         $filename = 'rapport-' . $module->code . '-' . date('Y-m-d') . '.xlsx';
         return Excel::download(new AttendanceExport($statistics, $filename), $filename);
+    }
+
+    /**
+     * Export attendance data (AJAX endpoint for export modal)
+     */
+    public function exportAttendance(Request $request)
+    {
+        $teacher = Auth::user()->teacher;
+
+        $request->validate([
+            'module_id' => 'nullable|exists:modules,id',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+        ]);
+
+        // If module is specified, verify teacher has access
+        if ($request->filled('module_id')) {
+            $module = Module::findOrFail($request->module_id);
+            if (!$teacher->modules->contains($module)) {
+                abort(403, 'Non autorisé.');
+            }
+
+            // Build query for sessions
+            $query = CourseSession::where('module_id', $module->id)
+                ->where('teacher_id', $teacher->id)
+                ->whereBetween('start_time', [$request->from_date, $request->to_date]);
+
+            $sessions = $query->with(['group', 'attendanceRecords.student.user'])->get();
+
+            // Calculate statistics
+            $statistics = $this->calculateReportStatistics($module, $teacher, $sessions, [
+                'date_from' => $request->from_date,
+                'date_to' => $request->to_date,
+            ]);
+
+            $filename = 'presence-' . $module->code . '-' . date('Y-m-d') . '.xlsx';
+            return Excel::download(new AttendanceExport($statistics, [
+                'from_date' => $request->from_date,
+                'to_date' => $request->to_date,
+                'module_id' => $request->module_id
+            ]), $filename);
+        } else {
+            // Export all attendance data for the teacher
+            $modules = $teacher->modules;
+            $allStatistics = [];
+
+            foreach ($modules as $module) {
+                $query = CourseSession::where('module_id', $module->id)
+                    ->where('teacher_id', $teacher->id)
+                    ->whereBetween('start_time', [$request->from_date, $request->to_date]);
+
+                $sessions = $query->with(['group', 'attendanceRecords.student.user'])->get();
+
+                if ($sessions->count() > 0) {
+                    $statistics = $this->calculateReportStatistics($module, $teacher, $sessions, [
+                        'date_from' => $request->from_date,
+                        'date_to' => $request->to_date,
+                    ]);
+                    $allStatistics[$module->code] = $statistics;
+                }
+            }
+
+            $filename = 'presence-enseignant-' . date('Y-m-d') . '.xlsx';
+
+            // Create a custom export for multiple modules
+            return Excel::download(new class($allStatistics) implements \Maatwebsite\Excel\Concerns\WithMultipleSheets {
+                protected $statistics;
+
+                public function __construct($statistics)
+                {
+                    $this->statistics = $statistics;
+                }
+
+                public function sheets(): array
+                {
+                    $sheets = [];
+                    foreach ($this->statistics as $moduleCode => $stats) {
+                    $sheets[] = new class($stats, $moduleCode) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithTitle {
+                            public $stats;
+                            public $moduleCode;
+
+                            public function __construct($stats, $moduleCode)
+                            {
+                                $this->stats = $stats;
+                                $this->moduleCode = $moduleCode;
+                            }
+
+                            public function array(): array
+                            {
+                                return [
+                                    ['Module', $this->stats['module']->name],
+                                    ['Enseignant', $this->stats['teacher']->user->name],
+                                    ['Période', $this->stats['period']['from'] . ' au ' . $this->stats['period']['to']],
+                                    [],
+                                    ['Séances totales', $this->stats['total_sessions']],
+                                    ['Présences totales', $this->stats['total_present']],
+                                    ['Absences totales', $this->stats['total_absent']],
+                                    ['Taux de présence', $this->stats['overall_attendance_rate'] . '%'],
+                                ];
+                            }
+
+                            public function headings(): array
+                            {
+                                return ['Détail', 'Valeur'];
+                            }
+
+                            public function title(): string
+                            {
+                                return $this->moduleCode;
+                            }
+                        };
+                    }
+                    return $sheets;
+                }
+            }, $filename);
+        }
     }
 }

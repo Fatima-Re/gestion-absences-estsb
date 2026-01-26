@@ -7,10 +7,12 @@ use App\Models\User;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Group;
+use App\Exports\StudentsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
@@ -252,10 +254,34 @@ class UserController extends Controller
             'file' => 'required|file|mimes:csv,xlsx,xls',
             'group_id' => 'required|exists:groups,id',
         ]);
-        
+
         // TODO: Implement CSV/Excel import logic
-        
+
         return back()->with('success', 'Importation des étudiants en cours...');
+    }
+
+    /**
+     * Export students to Excel
+     */
+    public function exportStudents(Request $request)
+    {
+        $includeInactive = $request->boolean('include_inactive', false);
+        $includeGroups = $request->boolean('include_groups', true);
+
+        $query = Student::with(['user', 'group']);
+
+        if (!$includeInactive) {
+            $query->whereHas('user', function($q) {
+                $q->where('is_active', true);
+            });
+        }
+
+        $students = $query->get();
+
+        return Excel::download(
+            new StudentsExport($students),
+            'etudiants_' . now()->format('Y-m-d_H-i-s') . '.xlsx'
+        );
     }
 
     /**

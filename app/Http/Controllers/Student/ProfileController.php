@@ -20,17 +20,28 @@ class ProfileController extends Controller
     {
         $student = Auth::user()->student->load('group');
         $user = Auth::user();
-        
+
         // Calculate attendance statistics
         $attendanceStats = $this->calculateAttendanceStats($student);
-        
+
         // Get recent notifications
         $recentNotifications = \App\Models\Notification::where('user_id', Auth::id())
             ->latest()
             ->take(5)
             ->get();
-        
-        return view('student.profile.show', compact('student', 'user', 'attendanceStats', 'recentNotifications'));
+
+        return view('student.profile.index', compact('student', 'user', 'attendanceStats', 'recentNotifications'));
+    }
+
+    /**
+     * Show the form for editing the student's profile
+     */
+    public function edit()
+    {
+        $student = Auth::user()->student;
+        $user = Auth::user();
+
+        return view('student.profile.edit', compact('student', 'user'));
     }
 
     /**
