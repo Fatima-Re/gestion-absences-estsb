@@ -181,7 +181,7 @@
                                             </td>
                                             <td>
                                                 <a href="{{ route('teacher.attendance.student', $student) }}" class="btn btn-sm btn-outline-info">
-                                                    <i class="fas fa-eye"></i> Détails
+                                                    Détails
                                                 </a>
                                             </td>
                                         </tr>

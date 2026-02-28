@@ -40,10 +40,14 @@
         </div>
     </div>
 </div>
-
-{{-- JavaScript for Toast Notifications --}}
 <script>
 function showToast(type, message, duration = 5000) {
+    // Wait for Bootstrap to be loaded
+    if (typeof window.bootstrap === 'undefined') {
+        console.error('Bootstrap is not loaded yet');
+        return;
+    }
+
     const toastId = type + 'Toast';
     const messageId = type + 'Message';
 
@@ -53,7 +57,7 @@ function showToast(type, message, duration = 5000) {
     if (toastElement && messageElement) {
         messageElement.textContent = message;
 
-        const toast = new bootstrap.Toast(toastElement, {
+        const toast = new window.bootstrap.Toast(toastElement, {
             autohide: true,
             delay: duration
         });

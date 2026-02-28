@@ -72,19 +72,19 @@
                 <div class="card-body">
                     <div class="row text-center">
                         <div class="col-md-3">
-                            <h3 class="text-primary">{{ $stats['total_sessions'] }}</h3>
+                            <h3 class="text-primary">{{ $attendanceStats['total_sessions'] }}</h3>
                             <small class="text-muted">Sessions totales</small>
                         </div>
                         <div class="col-md-3">
-                            <h3 class="text-success">{{ $stats['present_sessions'] }}</h3>
+                            <h3 class="text-success">{{ $attendanceStats['total_sessions'] - $attendanceStats['total_absences'] }}</h3>
                             <small class="text-muted">Présences</small>
                         </div>
                         <div class="col-md-3">
-                            <h3 class="text-warning">{{ $stats['absent_sessions'] }}</h3>
+                            <h3 class="text-warning">{{ $attendanceStats['total_absences'] }}</h3>
                             <small class="text-muted">Absences</small>
                         </div>
                         <div class="col-md-3">
-                            <h3 class="text-info">{{ number_format($stats['attendance_rate'], 1) }}%</h3>
+                            <h3 class="text-info">{{ number_format($attendanceStats['attendance_rate'], 1) }}%</h3>
                             <small class="text-muted">Taux de présence</small>
                         </div>
                     </div>

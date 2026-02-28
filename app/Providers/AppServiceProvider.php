@@ -20,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register mail view path
+        \Illuminate\Support\Facades\View::addNamespace(
+            'mail',
+            resource_path('views/vendor/mail')
+        );
     }
 }

@@ -74,11 +74,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Statistics
     Route::get('statistics', [StatisticController::class, 'index'])->name('statistics.index');
-    Route::post('statistics/export', [StatisticController::class, 'export'])->name('statistics.export');
+    Route::get('statistics/export', [StatisticController::class, 'export'])->name('statistics.export');
 
     // Settings
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+    Route::post('settings/export', [SettingController::class, 'export'])->name('settings.export');
 
     // Import/Export
     Route::get('import', [UserController::class, 'showImportForm'])->name('import.index');

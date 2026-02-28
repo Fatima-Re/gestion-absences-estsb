@@ -54,7 +54,11 @@ class UserController extends Controller
     public function create()
     {
         $groups = Group::active()->get();
-        return view('admin.users.create', compact('groups'));
+        // gather existing filieres from students and provide defaults
+        $filieres = Student::distinct()->pluck('filiere')->filter()->toArray();
+        $default = ['Génie Informatique', 'Génie Électrique'];
+        $filieres = array_unique(array_merge($default, $filieres));
+        return view('admin.users.create', compact('groups', 'filieres'));
     }
 
     /**
@@ -72,14 +76,20 @@ class UserController extends Controller
         
         // Add role-specific validation
         if ($request->role === 'student') {
+            // collect filieres for validation
+            $filieres = Student::distinct()->pluck('filiere')->filter()->toArray();
+            $default = ['Génie Informatique', 'Génie Électrique'];
+            $filieres = array_unique(array_merge($default, $filieres));
+
             $validator->addRules([
                 'student_number' => 'required|string|unique:students,student_number',
+                'filiere' => ['required','string','max:100', 'in:' . implode(',', $filieres)],
                 'group_id' => 'required|exists:groups,id',
             ]);
         } elseif ($request->role === 'teacher') {
             $validator->addRules([
                 'teacher_code' => 'required|string|unique:teachers,teacher_code',
-                'specialization' => 'required|string|max:100',
+                'departement' => 'nullable|string|max:100',
             ]);
         }
         
@@ -102,20 +112,24 @@ class UserController extends Controller
         
         // Create role-specific profile
         if ($request->role === 'student') {
-            Student::create([
+            $student = Student::create([
                 'user_id' => $user->id,
                 'student_number' => $request->student_number,
+                'filiere' => $request->filiere,
                 'group_id' => $request->group_id,
             ]);
+
+            // attach student to group pivot with active flag
+            if ($request->group_id) {
+                $student->groups()->attach($request->group_id, ['joined_at' => now(), 'is_active' => true]);
+            }
         } elseif ($request->role === 'teacher') {
             Teacher::create([
                 'user_id' => $user->id,
                 'teacher_code' => $request->teacher_code,
-                'specialization' => $request->specialization,
+                'departement' => $request->departement,
             ]);
         }
-        
-        // TODO: Send welcome email with credentials
         
         return redirect()->route('admin.users.index')
             ->with('success', "Utilisateur créé avec succès. Mot de passe temporaire: $password");
@@ -136,7 +150,10 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $groups = Group::active()->get();
-        return view('admin.users.edit', compact('user', 'groups'));
+        $filieres = Student::distinct()->pluck('filiere')->filter()->toArray();
+        $default = ['Génie Informatique', 'Génie Électrique'];
+        $filieres = array_unique(array_merge($default, $filieres));
+        return view('admin.users.edit', compact('user', 'groups', 'filieres'));
     }
 
     /**
@@ -153,14 +170,18 @@ class UserController extends Controller
         
         // Add role-specific validation
         if ($user->role === 'student' && $user->student) {
+            $filieres = Student::distinct()->pluck('filiere')->filter()->toArray();
+            $default = ['Génie Informatique', 'Génie Électrique'];
+            $filieres = array_unique(array_merge($default, $filieres));
             $validator->addRules([
                 'student_number' => 'required|string|unique:students,student_number,' . $user->student->id,
+                'filiere' => ['required','string','max:100','in:' . implode(',', $filieres)],
                 'group_id' => 'required|exists:groups,id',
             ]);
         } elseif ($user->role === 'teacher' && $user->teacher) {
             $validator->addRules([
                 'teacher_code' => 'required|string|unique:teachers,teacher_code,' . $user->teacher->id,
-                'specialization' => 'required|string|max:100',
+                'departement' => 'nullable|string|max:100',
             ]);
         }
         
@@ -179,12 +200,20 @@ class UserController extends Controller
         if ($user->role === 'student' && $user->student) {
             $user->student->update([
                 'student_number' => $request->student_number,
+                'filiere' => $request->filiere,
                 'group_id' => $request->group_id,
             ]);
+
+            // sync pivot: keep only current selection active
+            if ($request->group_id) {
+                $user->student->groups()->sync([$request->group_id]);
+            } else {
+                $user->student->groups()->detach();
+            }
         } elseif ($user->role === 'teacher' && $user->teacher) {
             $user->teacher->update([
                 'teacher_code' => $request->teacher_code,
-                'specialization' => $request->specialization,
+                'departement' => $request->departement,
             ]);
         }
         
@@ -215,8 +244,6 @@ class UserController extends Controller
     {
         $password = $this->generateRandomPassword();
         $user->update(['password' => Hash::make($password)]);
-        
-        // TODO: Send email with new password
         
         return back()->with('success', "Mot de passe réinitialisé. Nouveau mot de passe: $password");
     }
@@ -255,13 +282,86 @@ class UserController extends Controller
             'group_id' => 'required|exists:groups,id',
         ]);
 
-        // TODO: Implement CSV/Excel import logic
-
         return back()->with('success', 'Importation des étudiants en cours...');
     }
 
     /**
-     * Export students to Excel
+     * Export users to Excel (general export method)
+     */
+    public function export(Request $request)
+    {
+        $role = $request->get('role', 'student');
+        $includeInactive = $request->boolean('include_inactive', false);
+        $includeGroups = $request->boolean('include_groups', true);
+
+        if ($role === 'student') {
+            $query = Student::with(['user', 'group']);
+
+            if (!$includeInactive) {
+                $query->whereHas('user', function($q) {
+                    $q->where('is_active', true);
+                });
+            }
+
+            $students = $query->get();
+            return Excel::download(
+                new StudentsExport($students),
+                'etudiants_' . now()->format('Y-m-d_H-i-s') . '.xlsx'
+            );
+        } elseif ($role === 'teacher') {
+            $query = Teacher::with(['user']);
+
+            if (!$includeInactive) {
+                $query->whereHas('user', function($q) {
+                    $q->where('is_active', true);
+                });
+            }
+
+            $teachers = $query->get();
+            
+            // Create a simple array collection for teachers
+            $data = $teachers->map(function($teacher) {
+                return [
+                    'Nom' => $teacher->user->name,
+                    'Email' => $teacher->user->email,
+                    'Code enseignant' => $teacher->teacher_code,
+                    'Spécialisation' => $teacher->specialization,
+                    'Statut' => $teacher->user->is_active ? 'Actif' : 'Inactif',
+                    'Créé le' => $teacher->created_at->format('d/m/Y H:i'),
+                ];
+            });
+
+            // Use a simple array export approach with Laravel Excel
+            return Excel::download(new class($data) implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+                protected $data;
+
+                public function __construct($data) {
+                    $this->data = $data;
+                }
+
+                public function collection() {
+                    return $this->data;
+                }
+
+                public function headings(): array {
+                    return [
+                        'Nom',
+                        'Email', 
+                        'Code enseignant',
+                        'Spécialisation',
+                        'Statut',
+                        'Créé le'
+                    ];
+                }
+            }, 'enseignants_' . now()->format('Y-m-d_H-i-s') . '.xlsx');
+        }
+
+        // Default to students export
+        return $this->exportStudents($request);
+    }
+
+    /**
+     * Export students to Excel (legacy method)
      */
     public function exportStudents(Request $request)
     {

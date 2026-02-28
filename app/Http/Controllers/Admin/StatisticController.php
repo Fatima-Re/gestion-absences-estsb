@@ -20,9 +20,9 @@ class StatisticController extends Controller
      */
     public function index(Request $request)
     {
-        // Get date range
-        $dateFrom = $request->get('date_from', now()->subMonth());
-        $dateTo = $request->get('date_to', now());
+        // Get date range and convert to Carbon objects
+        $dateFrom = $request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from')) : now()->subMonth();
+        $dateTo = $request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to')) : now();
         
         // Calculate statistics
         $statistics = $this->calculateStatistics($dateFrom, $dateTo, $request);
@@ -39,9 +39,9 @@ class StatisticController extends Controller
      */
     public function export(Request $request)
     {
-        // Get date range
-        $dateFrom = $request->get('date_from', now()->subMonth());
-        $dateTo = $request->get('date_to', now());
+        // Get date range and convert to Carbon objects
+        $dateFrom = $request->get('date_from') ? \Carbon\Carbon::parse($request->get('date_from')) : now()->subMonth();
+        $dateTo = $request->get('date_to') ? \Carbon\Carbon::parse($request->get('date_to')) : now();
         
         // Calculate statistics
         $statistics = $this->calculateStatistics($dateFrom, $dateTo, $request);

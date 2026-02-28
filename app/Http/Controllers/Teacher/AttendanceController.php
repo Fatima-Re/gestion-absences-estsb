@@ -20,6 +20,14 @@ class AttendanceController extends Controller
     {
         $teacher = Auth::user()->teacher;
         
+        // Get today's sessions
+        $todaySessions = CourseSession::where('teacher_id', $teacher->id)
+            ->whereDate('start_time', today())
+            ->where('status', CourseSession::STATUS_SCHEDULED)
+            ->with(['module', 'group'])
+            ->orderBy('start_time')
+            ->get();
+        
         $query = CourseSession::where('teacher_id', $teacher->id)
             ->whereHas('attendanceRecords')
             ->with(['module', 'group']);
@@ -30,18 +38,27 @@ class AttendanceController extends Controller
         }
         
         if ($request->filled('date_from') && $request->filled('date_to')) {
-            $query->whereBetween('date', [$request->date_from, $request->date_to]);
+            $query->whereBetween('start_time', [$request->date_from, $request->date_to]);
         }
         
         if ($request->filled('group_id')) {
             $query->where('group_id', $request->group_id);
         }
         
-        $sessions = $query->orderBy('date', 'desc')->paginate(20);
+        $sessions = $query->orderBy('start_time', 'desc')->paginate(20);
         $modules = $teacher->modules;
         $groups = $teacher->groups();
         
-        return view('teacher.attendance.index', compact('sessions', 'modules', 'groups'));
+        // Get recent attendance records
+        $recentAttendance = AttendanceRecord::whereHas('session', function($q) use ($teacher) {
+                $q->where('teacher_id', $teacher->id);
+            })
+            ->with(['session.module', 'session.group'])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        
+        return view('teacher.attendance.index', compact('todaySessions', 'sessions', 'modules', 'groups', 'recentAttendance'));
     }
 
     /**

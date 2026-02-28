@@ -98,6 +98,30 @@
         </div>
     </div>
 
+    <!-- Charts Section -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Statistiques des absences</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="absencesChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Répartition par statut</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Recent Absences -->
     <div class="row mb-4">
         <div class="col-12">
@@ -185,5 +209,67 @@
             </div>
         </div>
     </div>
+
+    <!-- Chart Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Absences Chart
+        const absencesCtx = document.getElementById('absencesChart').getContext('2d');
+        const absencesChart = new Chart(absencesCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Aujourd\'hui', 'Cette semaine', 'Ce mois'],
+                datasets: [{
+                    label: 'Nombre d\'absences',
+                    data: [{{ $stats['absences_today'] }}, {{ $stats['absences_week'] ?? 0 }}, {{ $stats['absences_month'] ?? 0 }}],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 205, 86, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 205, 86, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Status Chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        const statusChart = new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Justifiées', 'En attente', 'Non justifiées'],
+                datasets: [{
+                    data: [{{ $stats['justified_count'] ?? 0 }}, {{ $stats['pending_count'] ?? 0 }}, {{ $stats['unjustified_count'] ?? 0 }}],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(220, 53, 69, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(220, 53, 69, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+    </script>
 </div>
 @endsection

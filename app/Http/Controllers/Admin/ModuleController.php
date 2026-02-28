@@ -17,7 +17,8 @@ class ModuleController extends Controller
     public function index()
     {
         $modules = Module::with(['teachers', 'groups'])->latest()->paginate(20);
-        return view('admin.modules.index', compact('modules'));
+        $teachers = Teacher::with('user')->get();
+        return view('admin.modules.index', compact('modules', 'teachers'));
     }
 
     /**

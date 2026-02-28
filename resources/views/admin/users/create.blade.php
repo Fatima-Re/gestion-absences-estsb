@@ -80,6 +80,23 @@
                     </div>
 
                     <div class="row mb-3">
+                        <label for="filiere" class="col-md-3 col-form-label">Filière</label>
+                        <div class="col-md-9">
+                            <select id="filiere" class="form-select @error('filiere') is-invalid @enderror" name="filiere">
+                                <option value="">Sélectionner une filière</option>
+                                @foreach($filieres as $f)
+                                    <option value="{{ $f }}" {{ old('filiere') == $f ? 'selected' : '' }}>{{ $f }}</option>
+                                @endforeach
+                            </select>
+                            @error('filiere')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
                         <label for="group_id" class="col-md-3 col-form-label">Groupe</label>
                         <div class="col-md-9">
                             <select id="group_id" class="form-select @error('group_id') is-invalid @enderror" name="group_id">
@@ -111,10 +128,10 @@
                     </div>
 
                     <div class="row mb-3">
-                        <label for="specialization" class="col-md-3 col-form-label">Spécialisation</label>
+                        <label for="departement" class="col-md-3 col-form-label">Département</label>
                         <div class="col-md-9">
-                            <input id="specialization" type="text" class="form-control @error('specialization') is-invalid @enderror" name="specialization" value="{{ old('specialization') }}">
-                            @error('specialization')
+                            <input id="departement" type="text" class="form-control @error('departement') is-invalid @enderror" name="departement" value="{{ old('departement') }}">
+                            @error('departement')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
                                 </span>

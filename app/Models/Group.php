@@ -27,7 +27,9 @@ class Group extends Model
 
     public function students()
     {
-        return $this->hasMany(Student::class);
+        return $this->belongsToMany(Student::class, 'group_student')
+                    ->withPivot('joined_at', 'left_at', 'is_active')
+                    ->withTimestamps();
     }
 
     public function modules()

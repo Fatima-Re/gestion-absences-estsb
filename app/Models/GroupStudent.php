@@ -16,7 +16,8 @@ class GroupStudent extends Pivot
         'academic_year',
         'semester',
         'joined_at',
-        'left_at'
+        'left_at',
+        'is_active'
     ];
 
     protected $casts = [

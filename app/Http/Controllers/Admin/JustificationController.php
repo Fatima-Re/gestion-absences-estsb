@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Justification;
 use App\Models\Absence;
+use App\Models\Module;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+
    
 
 
@@ -19,6 +21,10 @@ class JustificationController extends Controller
      */
     public function index(Request $request)
     {
+        // Add this line to fetch modules
+        $modules = Module::all(); // Or however you want to fetch modules
+        
+        // Make sure you pass modules to the view
         $query = Justification::with(['student.user', 'absence.session.module']);
         
         // Filter by status
@@ -47,7 +53,7 @@ class JustificationController extends Controller
         
         $justifications = $query->latest()->paginate(20);
         
-        return view('admin.justifications.index', compact('justifications'));
+        return view('admin.justifications.index', compact('justifications', 'modules'));
     }
 
     /**

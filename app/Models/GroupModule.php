@@ -14,7 +14,8 @@ class GroupModule extends Pivot
         'group_id',
         'module_id',
         'academic_year',
-        'semester'
+        'semester',
+        'is_active'
     ];
 
     public function group()

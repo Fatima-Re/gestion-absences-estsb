@@ -31,13 +31,19 @@ class ScheduleController extends Controller
     {
         $teacher = Auth::user()->teacher;
         
+        // Calculate week information
+        $currentWeek = (int) $request->get('week', 0);
+        $today = now();
+        $startOfWeek = $today->copy()->startOfWeek()->addWeeks($currentWeek);
+        $endOfWeek = $startOfWeek->copy()->endOfWeek();
+        
         // Build query for teacher's sessions
         $query = CourseSession::where('teacher_id', $teacher->id)
             ->with(['module', 'group']);
         
         // Apply date filter
         if ($request->filled('date')) {
-            $query->whereDate('date', $request->date);
+            $query->whereDate('start_time', $request->date);
         }
         
         // Apply module filter
@@ -50,19 +56,20 @@ class ScheduleController extends Controller
             $query->where('status', $request->status);
         }
         
-        // Apply period filter
-        if ($request->filled('date_from') && $request->filled('date_to')) {
-            $query->whereBetween('date', [$request->date_from, $request->date_to]);
-        }
+        // Apply period filter for current week
+        $query->whereBetween('start_time', [
+            $startOfWeek->copy()->startOfDay(),
+            $endOfWeek->copy()->endOfDay()
+        ]);
         
         // Order by date and time
-        $sessions = $query->orderBy('date')->orderBy('start_time')->paginate(20);
+        $schedule = $query->orderBy('start_time')->get();
         
         // Get filter options
         $modules = $teacher->modules;
         $groups = $teacher->groups();
         
-        return view('teacher.schedule.index', compact('sessions', 'modules', 'groups'));
+        return view('teacher.schedule.index', compact('schedule', 'modules', 'groups', 'startOfWeek', 'endOfWeek', 'currentWeek'));
     }
 
     /**

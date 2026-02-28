@@ -184,10 +184,10 @@ class TopAbsentStudentsSheet implements FromArray, WithHeadings, WithTitle, With
         
         foreach ($this->statistics['top_absent_students'] as $student) {
             $data[] = [
-                $student->user->name,
-                $student->student_number,
-                $student->group->name,
-                $student->absences_count,
+                $student->user->name ?? 'N/A',
+                $student->student_number ?? 'N/A',
+                $student->group->name ?? 'N/A',
+                $student->absences_count ?? 0,
             ];
         }
         

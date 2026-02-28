@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Models\User;
+use App\Mail\ResetPasswordMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 
 
@@ -116,8 +121,30 @@ class AuthController extends Controller
     {
         $request->validate(['email' => 'required|email|exists:users,email']);
         
-        // TODO: Implement password reset email logic
-        return back()->with('status', 'Un lien de réinitialisation a été envoyé à votre email.');
+        $user = User::where('email', $request->email)->first();
+        
+        // Generate reset token
+        $token = Str::random(64);
+        
+        // Store reset token in database
+        DB::table('password_resets')->where('email', $user->email)->delete();
+        DB::table('password_resets')->insert([
+            'email' => $user->email,
+            'token' => Hash::make($token),
+            'created_at' => now(),
+        ]);
+        
+        // Generate reset link
+        $resetLink = route('password.reset', ['token' => $token]);
+        
+        // Send email
+        try {
+            Mail::to($user->email)->send(new ResetPasswordMail($resetLink, $user->name));
+            return back()->with('status', 'Un lien de réinitialisation a été envoyé à votre email.');
+        } catch (\Exception $e) {
+            Log::error('Password reset email failed: ' . $e->getMessage());
+            return back()->withErrors(['email' => 'Erreur lors de l\'envoi de l\'email. Veuillez réessayer.']);
+        }
     }
 
     /**
@@ -139,8 +166,30 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
         
-        // TODO: Implement password reset logic
-        return redirect()->route('login')->with('status', 'Mot de passe réinitialisé avec succès.');
+        // Find the reset record
+        $resetRecord = DB::table('password_resets')
+            ->where('email', $request->email)
+            ->first();
+        
+        // Validate token exists and is not expired (60 minutes)
+        if (!$resetRecord || !Hash::check($request->token, $resetRecord->token)) {
+            return back()->withErrors(['token' => 'Le lien de réinitialisation est invalide.']);
+        }
+        
+        if (now()->diffInMinutes($resetRecord->created_at) > 60) {
+            DB::table('password_resets')->where('email', $request->email)->delete();
+            return back()->withErrors(['token' => 'Le lien de réinitialisation a expiré. Veuillez demander un nouveau lien.']);
+        }
+        
+        // Update user password
+        $user = User::where('email', $request->email)->first();
+        $user->password = Hash::make($request->password);
+        $user->save();
+        
+        // Delete the reset token
+        DB::table('password_resets')->where('email', $request->email)->delete();
+        
+        return redirect()->route('login')->with('status', 'Mot de passe réinitialisé avec succès. Veuillez vous connecter avec votre nouveau mot de passe.');
     }
 
     /**
@@ -156,7 +205,7 @@ class AuthController extends Controller
             case User::ROLE_STUDENT:
                 return redirect()->route('student.dashboard');
             default:
-                return redirect()->route('home');
+                return redirect()->route('dashboard');
         }
     }
 }

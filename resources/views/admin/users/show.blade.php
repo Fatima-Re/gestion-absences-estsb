@@ -49,6 +49,9 @@
                         <dt class="col-sm-3">Numéro étudiant</dt>
                         <dd class="col-sm-9">{{ $user->student->student_number }}</dd>
 
+                        <dt class="col-sm-3">Filière</dt>
+                        <dd class="col-sm-9">{{ $user->student->filiere ?? 'N/A' }}</dd>
+
                         <dt class="col-sm-3">Groupe</dt>
                         <dd class="col-sm-9">{{ $user->student->group->name ?? 'N/A' }}</dd>
                     </dl>
@@ -66,8 +69,8 @@
                         <dt class="col-sm-3">Code enseignant</dt>
                         <dd class="col-sm-9">{{ $user->teacher->teacher_code }}</dd>
 
-                        <dt class="col-sm-3">Spécialisation</dt>
-                        <dd class="col-sm-9">{{ $user->teacher->specialization ?? 'N/A' }}</dd>
+                        <dt class="col-sm-3">Département</dt>
+                        <dd class="col-sm-9">{{ $user->teacher->departement ?? 'N/A' }}</dd>
                     </dl>
                 </div>
             </div>

@@ -21,7 +21,7 @@ class SessionController extends Controller
         
         // Apply filters
         if ($request->filled('date')) {
-            $query->whereDate('date', $request->date);
+            $query->whereDate('start_time', $request->date);
         }
         
         if ($request->filled('module_id')) {

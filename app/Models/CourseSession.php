@@ -52,7 +52,7 @@ class CourseSession extends Model
 
     public function attendanceRecords()
     {
-        return $this->hasMany(AttendanceRecord::class);
+        return $this->hasMany(AttendanceRecord::class, 'session_id');
     }
 
     public function absences()

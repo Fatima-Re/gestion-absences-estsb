@@ -203,13 +203,7 @@ GET    /api/absences/{user}    # Absences d'un utilisateur (Student)
 POST   /api/justifications     # Soumettre justification (Student)
 ```
 
-## 🤝 Contribution
 
-1. Fork le projet
-2. Créez une branche feature (`git checkout -b feature/AmazingFeature`)
-3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`)
-4. Pushez vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrez une Pull Request
 
 ## 📄 Licence
 

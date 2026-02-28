@@ -8,6 +8,7 @@ use App\Models\CourseSession;
 use App\Models\Absence;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ModuleController extends Controller
 {
@@ -33,15 +34,19 @@ class ModuleController extends Controller
         $teacher = Auth::user()->teacher;
         
         // Get date range for statistics
-        $dateFrom = $request->get('date_from', now()->subMonth());
-        $dateTo = $request->get('date_to', now());
+        $dateFrom = $request->has('date_from') 
+            ? Carbon::parse($request->get('date_from')) 
+            : now()->subMonth();
+        $dateTo = $request->has('date_to') 
+            ? Carbon::parse($request->get('date_to')) 
+            : now();
         
         // Get sessions for this module
         $sessions = CourseSession::where('module_id', $module->id)
             ->where('teacher_id', $teacher->id)
-            ->whereBetween('date', [$dateFrom, $dateTo])
+            ->whereBetween('start_time', [$dateFrom, $dateTo])
             ->with(['group', 'attendanceRecords'])
-            ->orderBy('date', 'desc')
+            ->orderBy('start_time', 'desc')
             ->paginate(20);
         
         // Calculate module statistics
@@ -95,7 +100,7 @@ class ModuleController extends Controller
         // Get sessions within date range
         $sessions = CourseSession::where('module_id', $module->id)
             ->where('teacher_id', $teacher->id)
-            ->whereBetween('date', [$dateFrom, $dateTo])
+            ->whereBetween('start_time', [$dateFrom, $dateTo])
             ->get();
         
         $totalSessions = $sessions->count();
@@ -108,7 +113,7 @@ class ModuleController extends Controller
         $absences = Absence::whereHas('session', function($q) use ($module, $teacher, $dateFrom, $dateTo) {
                 $q->where('module_id', $module->id)
                   ->where('teacher_id', $teacher->id)
-                  ->whereBetween('date', [$dateFrom, $dateTo]);
+                  ->whereBetween('start_time', [$dateFrom, $dateTo]);
             })
             ->count();
         
@@ -124,17 +129,23 @@ class ModuleController extends Controller
                     $q->where('module_id', $module->id)
                       ->where('teacher_id', $teacher->id)
                       ->where('group_id', $group->id)
-                      ->whereBetween('date', [$dateFrom, $dateTo]);
+                      ->whereBetween('start_time', [$dateFrom, $dateTo]);
                 })
                 ->count();
             
             $groupExpected = $groupSessions->count() * $group->studentsCount();
             $groupRate = $groupExpected > 0 ? (($groupExpected - $groupAbsences) / $groupExpected) * 100 : 0;
             
+            // Calculate present students
+            $presentCount = $groupExpected - $groupAbsences;
+            
             $attendanceByGroup[] = [
                 'group' => $group,
                 'sessions' => $groupSessions->count(),
                 'absences' => $groupAbsences,
+                'present' => $presentCount,
+                'absent' => $groupAbsences,
+                'late' => 0, // Late tracking would need to be stored separately
                 'attendance_rate' => round($groupRate, 2),
             ];
         }
@@ -158,8 +169,8 @@ class ModuleController extends Controller
         // Add weekly trend
         $weeklyTrend = CourseSession::where('module_id', $module->id)
             ->where('teacher_id', $teacher->id)
-            ->whereBetween('date', [$dateFrom, $dateTo])
-            ->selectRaw('YEARWEEK(date, 1) as week, COUNT(*) as sessions')
+            ->whereBetween('start_time', [$dateFrom, $dateTo])
+            ->selectRaw('YEARWEEK(start_time, 1) as week, COUNT(*) as sessions')
             ->groupBy('week')
             ->orderBy('week')
             ->get()
@@ -167,7 +178,7 @@ class ModuleController extends Controller
                 $absences = Absence::whereHas('session', function($q) use ($module, $teacher, $item) {
                         $q->where('module_id', $module->id)
                           ->where('teacher_id', $teacher->id)
-                          ->whereRaw('YEARWEEK(date, 1) = ?', [$item->week]);
+                          ->whereRaw('YEARWEEK(start_time, 1) = ?', [$item->week]);
                     })
                     ->count();
                 
@@ -192,14 +203,14 @@ class ModuleController extends Controller
                 $q->whereHas('session', function($q2) use ($module, $teacher, $dateFrom, $dateTo) {
                     $q2->where('module_id', $module->id)
                        ->where('teacher_id', $teacher->id)
-                       ->whereBetween('date', [$dateFrom, $dateTo]);
+                       ->whereBetween('start_time', [$dateFrom, $dateTo]);
                 });
             })
             ->withCount(['absences' => function($q) use ($module, $teacher, $dateFrom, $dateTo) {
                 $q->whereHas('session', function($q2) use ($module, $teacher, $dateFrom, $dateTo) {
                     $q2->where('module_id', $module->id)
                        ->where('teacher_id', $teacher->id)
-                       ->whereBetween('date', [$dateFrom, $dateTo]);
+                       ->whereBetween('start_time', [$dateFrom, $dateTo]);
                 });
             }])
             ->orderBy('absences_count', 'desc')

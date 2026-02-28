@@ -6,7 +6,7 @@
 
     @include('partials.page-header', [
         'title' => 'Modifier mon profil',
-        'actions' => '<a href="' . route('student.profile.index') . '" class="btn btn-secondary">Retour au profil</a>'
+        'actions' => '<a href="' . route('student.profile.show') . '" class="btn btn-secondary">Retour au profil</a>'
     ])
 
     <div class="row justify-content-center">
@@ -43,6 +43,7 @@
                         <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
                             <form action="{{ route('student.profile.update') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
+                                @method('PUT')
                                 <input type="hidden" name="section" value="personal">
 
                                 <div class="row">
@@ -109,7 +110,7 @@
 
                                         @if($student->photo_url)
                                             <div class="mb-3">
-                                                <form action="{{ route('student.profile.deletePhoto') }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer votre photo de profil?');">
+                                                <form action="{{ route('student.profile.delete-photo') }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer votre photo de profil?');">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-outline-danger btn-sm">
@@ -133,6 +134,7 @@
                         <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
                             <form action="{{ route('student.profile.update') }}" method="POST">
                                 @csrf
+                                @method('PUT')
                                 <input type="hidden" name="section" value="contact">
 
                                 <div class="row">
@@ -206,6 +208,7 @@
                         <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
                             <form action="{{ route('student.profile.update') }}" method="POST">
                                 @csrf
+                                @method('PUT')
                                 <input type="hidden" name="section" value="security">
 
                                 <div class="alert alert-info">
@@ -247,6 +250,7 @@
                         <div class="tab-pane fade" id="preferences" role="tabpanel" aria-labelledby="preferences-tab">
                             <form action="{{ route('student.profile.update') }}" method="POST">
                                 @csrf
+                                @method('PUT')
                                 <input type="hidden" name="section" value="preferences">
 
                                 <div class="row">

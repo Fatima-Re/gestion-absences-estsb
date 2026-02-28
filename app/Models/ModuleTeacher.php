@@ -13,15 +13,14 @@ class ModuleTeacher extends Pivot
     protected $fillable = [
         'module_id',
         'teacher_id',
-        'is_responsible',
+        'role',
         'academic_year',
-        'semester'
+        'semester',
+        'assigned_hours',
+        'is_active'
     ];
 
-    protected $casts = [
-        'is_responsible' => 'boolean'
-    ];
-
+  
     public function module()
     {
         return $this->belongsTo(Module::class);

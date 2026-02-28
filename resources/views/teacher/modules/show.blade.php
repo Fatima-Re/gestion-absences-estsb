@@ -162,9 +162,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('teacher.attendance.show', $session) }}" class="btn btn-sm btn-info" title="Voir les présences">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+                                            <a href="{{ route('teacher.attendance.show', $session) }}" class="btn btn-sm btn-info">Voir</a>
                                         </td>
                                     </tr>
                                 @empty

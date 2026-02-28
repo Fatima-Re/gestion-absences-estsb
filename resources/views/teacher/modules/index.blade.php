@@ -50,10 +50,10 @@
                     <div class="card-footer">
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('teacher.modules.show', $module) }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-eye me-1"></i>Voir détails
+                                Voir détails
                             </a>
                             <a href="{{ route('teacher.modules.statistics', $module) }}" class="btn btn-outline-info btn-sm">
-                                <i class="fas fa-chart-bar me-1"></i>Statistiques
+                                Statistiques
                             </a>
                         </div>
                     </div>

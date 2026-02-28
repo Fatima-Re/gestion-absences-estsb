@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('students', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('student_code')->unique(); // Ex: SB2024001
+            $table->string('student_number')->unique(); // Ex: SB2024001 (identifiant numérique de l'étudiant)
             $table->string('cin')->unique()->nullable(); // Carte d'identité
             $table->string('cne')->unique()->nullable(); // Pour les étudiants marocains
             $table->date('date_of_birth')->nullable();

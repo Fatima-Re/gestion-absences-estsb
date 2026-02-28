@@ -39,7 +39,7 @@ class AbsenceController extends Controller
         }
         
         $absences = $query->latest()->paginate(20);
-        $modules = $student->group->modules;
+        $modules = $student->group ? $student->group->modules : collect();
         
         return view('student.absences.index', compact('absences', 'modules'));
     }
@@ -51,7 +51,7 @@ class AbsenceController extends Controller
     {
         $user = $request->user();
         $student = $user->student;
-        $modules = $student->group->modules;
+        $modules = $student->group ? $student->group->modules : collect();
         
         $statistics = [];
         

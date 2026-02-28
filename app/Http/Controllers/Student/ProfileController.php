@@ -380,34 +380,36 @@ class ProfileController extends Controller
         $unjustifiedAbsences = $student->absences()->where('status', \App\Models\Absence::STATUS_UNJUSTIFIED)->count();
         $pendingAbsences = $student->absences()->where('status', \App\Models\Absence::STATUS_PENDING)->count();
         
-        $totalSessions = \App\Models\CourseSession::where('group_id', $student->group_id)->count();
+        $totalSessions = $student->group_id ? \App\Models\CourseSession::where('group_id', $student->group_id)->count() : 0;
         $attendanceRate = $totalSessions > 0 
             ? (($totalSessions - $totalAbsences) / $totalSessions) * 100 
             : 100;
         
         // Get module-wise attendance
         $moduleStats = [];
-        foreach ($student->group->modules as $module) {
-            $moduleAbsences = $student->absences()
-                ->whereHas('session', function($q) use ($module) {
-                    $q->where('module_id', $module->id);
-                })
-                ->count();
-            
-            $moduleSessions = $module->courseSessions()
-                ->where('group_id', $student->group_id)
-                ->count();
-            
-            $moduleRate = $moduleSessions > 0 
-                ? (($moduleSessions - $moduleAbsences) / $moduleSessions) * 100 
-                : 100;
-            
-            $moduleStats[] = [
-                'module' => $module->name,
-                'absences' => $moduleAbsences,
-                'sessions' => $moduleSessions,
-                'attendance_rate' => round($moduleRate, 2),
-            ];
+        if ($student->group) {
+            foreach ($student->group->modules as $module) {
+                $moduleAbsences = $student->absences()
+                    ->whereHas('session', function($q) use ($module) {
+                        $q->where('module_id', $module->id);
+                    })
+                    ->count();
+                
+                $moduleSessions = $module->courseSessions()
+                    ->where('group_id', $student->group_id)
+                    ->count();
+                
+                $moduleRate = $moduleSessions > 0 
+                    ? (($moduleSessions - $moduleAbsences) / $moduleSessions) * 100 
+                    : 100;
+                
+                $moduleStats[] = [
+                    'module' => $module->name,
+                    'absences' => $moduleAbsences,
+                    'sessions' => $moduleSessions,
+                    'attendance_rate' => round($moduleRate, 2),
+                ];
+            }
         }
         
         return [

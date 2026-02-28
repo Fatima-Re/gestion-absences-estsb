@@ -12,10 +12,12 @@ class Teacher extends Model
     protected $fillable = [
         'user_id',
         'teacher_code',
-        'specialization',
+        'cin',
+        'departement',
+        'grade',
+        'phone',
         'office',
-        'office_hours',
-        'qualification'
+        'hire_date'
     ];
 
     public function user()
@@ -26,8 +28,20 @@ class Teacher extends Model
     public function modules()
     {
         return $this->belongsToMany(Module::class, 'module_teacher')
-                    ->withPivot('is_responsible')
+                    ->withPivot('role', 'assigned_hours', 'is_active')
                     ->withTimestamps();
+    }
+
+    public function groups()
+    {
+        return $this->hasManyThrough(
+            Group::class,
+            CourseSession::class,
+            'teacher_id',
+            'id',
+            'id',
+            'group_id'
+        )->distinct();
     }
 
     public function courseSessions()

@@ -121,27 +121,19 @@
                             </td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <a href="{{ route('admin.sessions.show', $session) }}" class="btn btn-sm btn-info" title="Voir">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                    <a href="{{ route('admin.sessions.show', $session) }}" class="btn btn-sm btn-info">Voir</a>
                                     @if($session->status === 'scheduled')
-                                        <a href="{{ route('admin.sessions.edit', $session) }}" class="btn btn-sm btn-warning" title="Modifier">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
+                                        <a href="{{ route('admin.sessions.edit', $session) }}" class="btn btn-sm btn-warning">Modifier</a>
                                         <form action="{{ route('admin.sessions.cancel', $session) }}" method="POST" class="d-inline" onsubmit="return confirm('Êtes-vous sûr d\'annuler cette séance?');">
                                             @csrf
                                             <input type="hidden" name="reason" value="Annulation par l'administrateur">
-                                            <button type="submit" class="btn btn-sm btn-danger" title="Annuler">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                            <button type="submit" class="btn btn-sm btn-secondary">Annuler</button>
                                         </form>
                                     @endif
                                     <form action="{{ route('admin.sessions.destroy', $session) }}" method="POST" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de supprimer cette séance?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Supprimer">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
                                     </form>
                                 </div>
                             </td>

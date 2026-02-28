@@ -100,12 +100,12 @@
                                     <i class="fas fa-save me-2"></i>Enregistrer les paramètres
                                 </button>
                                 <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary ms-2">
-                                    <i class="fas fa-times me-2"></i>Annuler
+                                    Annuler
                                 </a>
                             </div>
                             <div>
                                 <a href="{{ route('admin.settings.export') }}" class="btn btn-outline-info">
-                                    <i class="fas fa-download me-2"></i>Exporter
+                                    Exporter
                                 </a>
                             </div>
                         </div>

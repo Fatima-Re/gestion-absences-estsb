@@ -28,7 +28,7 @@ class DashboardController extends Controller
         
         // Today's sessions
         $todaySessions = CourseSession::where('group_id', $student->group_id)
-            ->whereDate('date', today())
+            ->whereDate('start_time', today())
             ->where('status', CourseSession::STATUS_SCHEDULED)
             ->with('module')
             ->orderBy('start_time')

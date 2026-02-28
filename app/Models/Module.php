@@ -29,7 +29,7 @@ class Module extends Model
     public function teachers()
     {
         return $this->belongsToMany(Teacher::class, 'module_teacher')
-                    ->withPivot('is_responsible')
+                    ->withPivot('role', 'assigned_hours', 'is_active')
                     ->withTimestamps();
     }
 

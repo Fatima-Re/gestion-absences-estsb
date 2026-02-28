@@ -5,8 +5,7 @@
     @include('partials.alerts')
 
     @include('partials.page-header', [
-        'title' => 'Mes justifications',
-        'actions' => '<a href="' . route('student.justifications.create') . '" class="btn btn-primary">Nouvelle justification</a>'
+        'title' => 'Mes justifications'
     ])
 
     <div class="card">

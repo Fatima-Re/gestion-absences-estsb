@@ -12,11 +12,18 @@ class Student extends Model
     protected $fillable = [
         'user_id',
         'student_number',
-        'group_id',
+        // kept for backward compatibility, but the database column is now student_number
+        //'student_code',
+        'cin',
+        'cne',
         'date_of_birth',
+        'phone',
         'address',
-        'photo_url',
+        'filiere',
+        'niveau',
         'academic_year',
+        'photo',
+        'group_id',
         'status'
     ];
 
@@ -29,9 +36,18 @@ class Student extends Model
         return $this->belongsTo(User::class);
     }
 
+    // current group relationship (nullable)
     public function group()
     {
         return $this->belongsTo(Group::class);
+    }
+
+    // many-to-many relation through pivot; historical records
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_student')
+                    ->withPivot('joined_at', 'left_at', 'is_active')
+                    ->withTimestamps();
     }
 
     public function absences()

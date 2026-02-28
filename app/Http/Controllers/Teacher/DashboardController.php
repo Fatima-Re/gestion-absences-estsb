@@ -18,7 +18,7 @@ class DashboardController extends Controller
         
         // Today's sessions
         $todaySessions = CourseSession::where('teacher_id', $teacher->id)
-            ->whereDate('date', today())
+            ->whereDate('start_time', today())
             ->where('status', CourseSession::STATUS_SCHEDULED)
             ->with(['module', 'group'])
             ->orderBy('start_time')
@@ -26,10 +26,10 @@ class DashboardController extends Controller
         
         // Upcoming sessions (next 5)
         $upcomingSessions = CourseSession::where('teacher_id', $teacher->id)
-            ->whereDate('date', '>', today())
+            ->whereDate('start_time', '>', today())
             ->where('status', CourseSession::STATUS_SCHEDULED)
             ->with(['module', 'group'])
-            ->orderBy('date')
+            ->orderBy('start_time')
             ->take(5)
             ->get();
         
@@ -46,10 +46,10 @@ class DashboardController extends Controller
         $stats = [
             'modules_count' => $teacher->modules()->count(),
             'sessions_this_month' => CourseSession::where('teacher_id', $teacher->id)
-                ->whereMonth('date', now()->month)
+                ->whereMonth('start_time', now()->month)
                 ->count(),
             'pending_attendance' => CourseSession::where('teacher_id', $teacher->id)
-                ->whereDate('date', '<', today())
+                ->whereDate('start_time', '<', today())
                 ->whereDoesntHave('attendanceRecords')
                 ->count(),
         ];

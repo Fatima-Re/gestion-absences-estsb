@@ -10,7 +10,6 @@ use App\Models\Module;
 use App\Models\Absence;
 use App\Models\Justification;
 use App\Models\CourseSession;
-use Illuminate\Http\Request;    
 
 class DashboardController extends Controller
 {

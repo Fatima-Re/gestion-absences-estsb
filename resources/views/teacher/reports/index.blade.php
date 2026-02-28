@@ -196,7 +196,7 @@
                                     <td>{{ now()->subDays(2)->format('d/m/Y H:i') }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-secondary" disabled>
-                                            <i class="fas fa-download"></i>
+                                            Télécharger
                                         </button>
                                     </td>
                                 </tr>
@@ -207,7 +207,7 @@
                                     <td>{{ now()->subDays(5)->format('d/m/Y H:i') }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-secondary" disabled>
-                                            <i class="fas fa-download"></i>
+                                            Télécharger
                                         </button>
                                     </td>
                                 </tr>
