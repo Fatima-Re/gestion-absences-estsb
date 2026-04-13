@@ -17,12 +17,15 @@ class Group extends Model
         'max_students',
         'academic_year',
         'semester',
-        'is_active'
+        'is_active',
+        'description',
+        'teacher_id',
     ];
 
     protected $casts = [
         'max_students' => 'integer',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'semester' => 'integer',
     ];
 
     public function students()

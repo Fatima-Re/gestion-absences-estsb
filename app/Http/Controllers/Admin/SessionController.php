@@ -7,6 +7,7 @@ use App\Models\CourseSession;
 use App\Models\Module;
 use App\Models\Group;
 use App\Models\Teacher;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -21,7 +22,7 @@ class SessionController extends Controller
         
         // Apply filters
         if ($request->filled('date')) {
-            $query->whereDate('start_time', $request->date);
+            $query->whereDate('date', $request->date);
         }
         
         if ($request->filled('module_id')) {
@@ -96,14 +97,16 @@ class SessionController extends Controller
             ])->withInput();
         }
 
-        // Create the session
+        $startAt = Carbon::parse($request->date.' '.$request->start_time);
+        $endAt = Carbon::parse($request->date.' '.$request->end_time);
+
         CourseSession::create([
             'module_id' => $request->module_id,
             'group_id' => $request->group_id,
             'teacher_id' => $request->teacher_id,
             'date' => $request->date,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
+            'start_time' => $startAt,
+            'end_time' => $endAt,
             'room' => $request->room,
             'topic' => $request->topic,
             'description' => $request->description,
@@ -166,8 +169,21 @@ class SessionController extends Controller
             ])->withInput();
         }
 
-        // Update the session
-        $session->update($request->all());
+        $startAt = Carbon::parse($request->date.' '.$request->start_time);
+        $endAt = Carbon::parse($request->date.' '.$request->end_time);
+
+        $session->update([
+            'module_id' => $request->module_id,
+            'group_id' => $request->group_id,
+            'teacher_id' => $request->teacher_id,
+            'date' => $request->date,
+            'start_time' => $startAt,
+            'end_time' => $endAt,
+            'room' => $request->room,
+            'topic' => $request->topic,
+            'description' => $request->description,
+            'status' => $request->status,
+        ]);
 
         return redirect()->route('admin.sessions.index')
             ->with('success', 'Séance mise à jour avec succès.');
@@ -220,21 +236,19 @@ class SessionController extends Controller
      */
     private function checkSchedulingConflict($request, $excludeSessionId = null)
     {
-        // Check room conflict
-        $roomQuery = CourseSession::where('date', $request->date)
-            ->where('room', $request->room)
-            ->where('id', '!=', $excludeSessionId)
-            ->where(function($q) use ($request) {
-                $q->where(function($q2) use ($request) {
-                    $q2->where('start_time', '<=', $request->start_time)
-                       ->where('end_time', '>', $request->start_time);
-                })->orWhere(function($q2) use ($request) {
-                    $q2->where('start_time', '<', $request->end_time)
-                       ->where('end_time', '>=', $request->end_time);
-                });
-            });
-        
-        if ($roomQuery->exists()) {
+        $reqStart = Carbon::parse($request->date.' '.$request->start_time);
+        $reqEnd = Carbon::parse($request->date.' '.$request->end_time);
+
+        $overlapFilter = function ($q) use ($reqStart, $reqEnd) {
+            $q->where('start_time', '<', $reqEnd)
+                ->where('end_time', '>', $reqStart);
+        };
+
+        $base = fn () => CourseSession::query()
+            ->whereDate('date', $request->date)
+            ->when($excludeSessionId, fn ($q) => $q->where('id', '!=', $excludeSessionId));
+
+        if ($base()->where('room', $request->room)->where($overlapFilter)->exists()) {
             return [
                 'has_conflict' => true,
                 'type' => 'room',
@@ -242,21 +256,7 @@ class SessionController extends Controller
             ];
         }
 
-        // Check teacher conflict
-        $teacherQuery = CourseSession::where('date', $request->date)
-            ->where('teacher_id', $request->teacher_id)
-            ->where('id', '!=', $excludeSessionId)
-            ->where(function($q) use ($request) {
-                $q->where(function($q2) use ($request) {
-                    $q2->where('start_time', '<=', $request->start_time)
-                       ->where('end_time', '>', $request->start_time);
-                })->orWhere(function($q2) use ($request) {
-                    $q2->where('start_time', '<', $request->end_time)
-                       ->where('end_time', '>=', $request->end_time);
-                });
-            });
-        
-        if ($teacherQuery->exists()) {
+        if ($base()->where('teacher_id', $request->teacher_id)->where($overlapFilter)->exists()) {
             return [
                 'has_conflict' => true,
                 'type' => 'teacher',
@@ -264,21 +264,7 @@ class SessionController extends Controller
             ];
         }
 
-        // Check group conflict
-        $groupQuery = CourseSession::where('date', $request->date)
-            ->where('group_id', $request->group_id)
-            ->where('id', '!=', $excludeSessionId)
-            ->where(function($q) use ($request) {
-                $q->where(function($q2) use ($request) {
-                    $q2->where('start_time', '<=', $request->start_time)
-                       ->where('end_time', '>', $request->start_time);
-                })->orWhere(function($q2) use ($request) {
-                    $q2->where('start_time', '<', $request->end_time)
-                       ->where('end_time', '>=', $request->end_time);
-                });
-            });
-        
-        if ($groupQuery->exists()) {
+        if ($base()->where('group_id', $request->group_id)->where($overlapFilter)->exists()) {
             return [
                 'has_conflict' => true,
                 'type' => 'group',

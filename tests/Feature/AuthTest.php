@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -14,12 +16,14 @@ class AuthTest extends TestCase
     public function user_can_login_with_valid_credentials()
     {
         // Create a test user
-        $user = User::factory()->create([
-            'email' => 'test@example.com',
-            'password' => bcrypt('password123'),
-            'role' => 'student',
-            'is_active' => true,
-        ]);
+        $user = User::factory()
+            ->student()
+            ->has(Student::factory(), 'student')
+            ->create([
+                'email' => 'test@example.com',
+                'password' => bcrypt('password123'),
+                'is_active' => true,
+            ]);
 
         // Attempt login
         $response = $this->post('/login', [
@@ -36,11 +40,14 @@ class AuthTest extends TestCase
     public function user_cannot_login_with_invalid_credentials()
     {
         // Create a test user
-        User::factory()->create([
-            'email' => 'test@example.com',
-            'password' => bcrypt('password123'),
-            'is_active' => true,
-        ]);
+        User::factory()
+            ->student()
+            ->has(Student::factory(), 'student')
+            ->create([
+                'email' => 'test@example.com',
+                'password' => bcrypt('password123'),
+                'is_active' => true,
+            ]);
 
         // Attempt login with wrong password
         $response = $this->post('/login', [
@@ -56,10 +63,12 @@ class AuthTest extends TestCase
     public function authenticated_student_can_access_dashboard()
     {
         /** @var User $user */
-        $user = User::factory()->create([
-            'role' => 'student',
-            'is_active' => true,
-        ]);
+        $user = User::factory()
+            ->student()
+            ->has(Student::factory(), 'student')
+            ->create([
+                'is_active' => true,
+            ]);
 
         $response = $this->actingAs($user)->get('/student/dashboard');
 
@@ -92,10 +101,12 @@ class AuthTest extends TestCase
     public function teacher_can_access_teacher_dashboard()
     {
         /** @var User $user */
-        $user = User::factory()->create([
-            'role' => 'teacher',
-            'is_active' => true,
-        ]);
+        $user = User::factory()
+            ->teacher()
+            ->has(Teacher::factory(), 'teacher')
+            ->create([
+                'is_active' => true,
+            ]);
 
         $response = $this->actingAs($user)->get('/teacher/dashboard');
 

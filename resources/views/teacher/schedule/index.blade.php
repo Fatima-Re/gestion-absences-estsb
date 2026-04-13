@@ -54,9 +54,15 @@
                                     @for($day = 0; $day < 6; $day++)
                                         @php
                                             $currentDate = $startOfWeek->copy()->addDays($day);
-                                            $sessions = $schedule->where('date', $currentDate->format('Y-m-d'))
-                                                                ->where('start_time', '>=', $time)
-                                                                ->where('start_time', '<', date('H:i', strtotime($time) + 3600));
+                                            $slotEnd = date('H:i', strtotime($time) + 3600);
+                                            $sessions = $schedule->filter(function ($session) use ($currentDate, $time, $slotEnd) {
+                                                $sessionDate = optional($session->date)->format('Y-m-d');
+                                                $sessionStart = optional($session->start_time)->format('H:i');
+
+                                                return $sessionDate === $currentDate->format('Y-m-d')
+                                                    && $sessionStart >= $time
+                                                    && $sessionStart < $slotEnd;
+                                            });
                                         @endphp
                                         <td>
                                             @if($sessions->count() > 0)
@@ -66,6 +72,17 @@
                                                         <small>Groupe: {{ $session->group->name }}</small><br>
                                                         {{ \Carbon\Carbon::parse($session->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($session->end_time)->format('H:i') }}<br>
                                                         <small>{{ $session->room ?? 'Salle N/A' }}</small>
+                                                        <div class="mt-2">
+                                                            @if($session->status === \App\Models\CourseSession::STATUS_SCHEDULED)
+                                                                <a href="{{ route('teacher.attendance.create', $session) }}" class="btn btn-sm btn-light">
+                                                                    Prendre la présence
+                                                                </a>
+                                                            @else
+                                                                <a href="{{ route('teacher.attendance.show', $session) }}" class="btn btn-sm btn-outline-light">
+                                                                    Voir présence
+                                                                </a>
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 @endforeach
                                             @else

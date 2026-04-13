@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Absence;
+use App\Models\Justification;
 use App\Models\Module;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -40,8 +41,15 @@ class AbsenceController extends Controller
         
         $absences = $query->latest()->paginate(20);
         $modules = $student->group ? $student->group->modules : collect();
-        
-        return view('student.absences.index', compact('absences', 'modules'));
+        $justificationTypes = [
+            Justification::TYPE_MEDICAL => 'Certificat médical',
+            Justification::TYPE_OFFICIAL => 'Convocation officielle',
+            Justification::TYPE_PERSONAL => 'Raison personnelle',
+            Justification::TYPE_TRANSPORT => 'Problème de transport',
+            Justification::TYPE_OTHER => 'Autre',
+        ];
+
+        return view('student.absences.index', compact('absences', 'modules', 'justificationTypes'));
     }
 
     /**

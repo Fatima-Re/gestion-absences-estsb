@@ -18,21 +18,23 @@ class DashboardController extends Controller
     public function index()
     {
         $student = Auth::user()->student;
-        
+
         // Recent absences
         $recentAbsences = Absence::where('student_id', $student->id)
             ->with(['session.module', 'justification'])
             ->latest()
             ->take(5)
             ->get();
-        
-        // Today's sessions
-        $todaySessions = CourseSession::where('group_id', $student->group_id)
-            ->whereDate('start_time', today())
-            ->where('status', CourseSession::STATUS_SCHEDULED)
-            ->with('module')
-            ->orderBy('start_time')
-            ->get();
+
+        // Today's sessions (requires assignment to a group)
+        $todaySessions = $student->group_id
+            ? CourseSession::where('group_id', $student->group_id)
+                ->whereDate('date', today())
+                ->where('status', CourseSession::STATUS_SCHEDULED)
+                ->with('module')
+                ->orderBy('start_time')
+                ->get()
+            : collect();
         
         // Pending justifications count
         $pendingJustifications = Justification::where('student_id', $student->id)
@@ -66,7 +68,9 @@ class DashboardController extends Controller
             ->where('status', Absence::STATUS_JUSTIFIED)
             ->count();
         
-        $totalSessions = CourseSession::where('group_id', $student->group_id)->count();
+        $totalSessions = $student->group_id
+            ? CourseSession::where('group_id', $student->group_id)->count()
+            : 0;
         $attendanceRate = $totalSessions > 0 
             ? (($totalSessions - $totalAbsences) / $totalSessions) * 100 
             : 100;

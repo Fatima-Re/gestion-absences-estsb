@@ -1,12 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\{DashboardController, UserController, GroupController, ModuleController, SessionController, AbsenceController, JustificationController, StatisticController, SettingController};
 use App\Http\Controllers\Teacher\{DashboardController as TeacherDashboard, ScheduleController, AttendanceController, ModuleController as TeacherModuleController, ReportController};
 use App\Http\Controllers\Student\{DashboardController as StudentDashboard, AbsenceController as StudentAbsenceController, JustificationController as StudentJustificationController, ScheduleController as StudentScheduleController, ProfileController, NotificationController};
-use Illuminate\Support\Facades\Auth;
-
 
 
 /*
@@ -27,7 +24,8 @@ Route::get('/', function (){
 // Authentication routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [App\Http\Controllers\Auth\AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [App\Http\Controllers\Auth\AuthController::class, 'login']);
+    Route::post('/login', [App\Http\Controllers\Auth\AuthController::class, 'login'])
+        ->middleware('throttle:20,1');
     Route::get('/forgot-password', [App\Http\Controllers\Auth\AuthController::class, 'showForgotPasswordForm'])->name('password.request');
     Route::post('/forgot-password', [App\Http\Controllers\Auth\AuthController::class, 'sendResetLinkEmail'])->name('password.email');
     Route::get('/reset-password/{token}', [App\Http\Controllers\Auth\AuthController::class, 'showResetPasswordForm'])->name('password.reset');
@@ -118,16 +116,6 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
 });
 
 // Student routes (require student role)
-// In your routes/web.php, add these to the student group:
-
-// Profile routes
-Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto'])->name('profile.delete-photo');
-Route::get('/profile/academic', [ProfileController::class, 'academicSummary'])->name('profile.academic');
-Route::get('/profile/documents', [ProfileController::class, 'myDocuments'])->name('profile.documents');
-Route::get('/profile/certificate', [ProfileController::class, 'downloadAttendanceCertificate'])->name('profile.certificate');
-Route::get('/profile/export-data', [ProfileController::class, 'exportMyData'])->name('profile.export-data');
 Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
     // Dashboard
     Route::get('/dashboard', [StudentDashboard::class, 'index'])->name('dashboard');
@@ -152,22 +140,21 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto'])->name('profile.delete-photo');
+    Route::get('/profile/academic', [ProfileController::class, 'academicSummary'])->name('profile.academic');
+    Route::get('/profile/documents', [ProfileController::class, 'myDocuments'])->name('profile.documents');
+    Route::get('/profile/certificate', [ProfileController::class, 'downloadAttendanceCertificate'])->name('profile.certificate');
+    Route::get('/profile/export-data', [ProfileController::class, 'exportMyData'])->name('profile.export-data');
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/preferences', [NotificationController::class, 'preferences'])->name('notifications.preferences');
     Route::post('/notifications/update-preferences', [NotificationController::class, 'updatePreferences'])->name('notifications.update-preferences');
-    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::match(['post', 'patch'], '/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     Route::post('/notifications/clear-read', [NotificationController::class, 'clearRead'])->name('notifications.clear-read');
     Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
-// Common routes (accessible to all authenticated users)
-Route::middleware('auth')->group(function () {
-    // Profile update (common for all roles)
-    Route::put('/profile/update', [App\Http\Controllers\Auth\AuthController::class, 'updateProfile'])->name('profile.update');
-});
-Auth::routes();
+Route::middleware('auth')->put('/profile/update', [App\Http\Controllers\Auth\AuthController::class, 'updateProfile'])->name('auth.profile.update');
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

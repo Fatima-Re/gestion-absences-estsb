@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class CourseSession extends Model
 {
@@ -89,5 +90,22 @@ class CourseSession extends Model
     public function scopeBetweenDates($query, $startDate, $endDate)
     {
         return $query->whereBetween('date', [$startDate, $endDate]);
+    }
+
+    /**
+     * Attendance can be modified only within the configured window after session date.
+     */
+    public function canBeModified(): bool
+    {
+        if ($this->status === self::STATUS_CANCELLED || $this->is_cancelled) {
+            return false;
+        }
+
+        $hours = Setting::getTeacherModificationPeriod();
+        $sessionDate = $this->date instanceof Carbon
+            ? $this->date->copy()
+            : Carbon::parse((string) $this->date);
+
+        return $sessionDate->diffInHours(now()) <= $hours;
     }
 }

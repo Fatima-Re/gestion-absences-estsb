@@ -34,8 +34,8 @@ Une application web complète de gestion des absences pour l'École Supérieure 
 - **Base de données**: MySQL
 - **Frontend**: Bootstrap 5, jQuery, CSS3
 - **Exports**: Laravel Excel (XLSX), DOMPDF (PDF)
-- **Authentification**: Middleware personnalisé par rôles
-- **Architecture**: MVC avec repositories et services
+- **Authentification**: Middleware personnalisé par rôles (`CheckRole`), routes web dans `routes/web.php`
+- **Architecture**: MVC Laravel (contrôleurs par rôle sous `app/Http/Controllers/`)
 
 ## 📋 Prérequis
 
@@ -81,6 +81,10 @@ DB_PASSWORD=votre_password
 php artisan migrate
 php artisan db:seed
 ```
+
+Le fichier [`database/migrations/2026_03_27_120000_align_database_with_application_models.php`](database/migrations/2026_03_27_120000_align_database_with_application_models.php) aligne le schéma (séances, présences par étudiant, absences/justifications, notifications, groupes, modules) sur les modèles Eloquent utilisés par l’application. Après une mise à jour du dépôt, exécutez toujours `php artisan migrate` sur votre base.
+
+**Données de démo** : `php artisan db:seed` appelle [`DemoDataSeeder`](database/seeders/DemoDataSeeder.php) (additif : n’efface pas les données existantes). Des comptes supplémentaires `@demo.local` / mots de passe `demo123` peuvent être créés en plus des comptes ESTSB ci-dessous.
 
 ### 6. Compilation des assets
 ```bash
@@ -174,13 +178,18 @@ L'application supporte plusieurs formats d'export :
 - **PDF**: Relevés individuels, statistiques
 - **JSON**: Sauvegarde des paramètres système
 
-## 🔒 Sécurité
+## 🔒 Sécurité et production
 
 - Authentification basée sur les rôles
 - Middleware de protection des routes
 - Validation des données côté serveur
 - Protection CSRF sur tous les formulaires
 - Mots de passe hashés avec bcrypt
+- Limitation du débit sur `POST /login` (throttle) pour limiter les tentatives de connexion
+
+**Mise en production (recommandations)** : définir `APP_DEBUG=false`, configurer le mail (`MAIL_*`) pour la réinitialisation du mot de passe, servir l’application en HTTPS, planifier des sauvegardes régulières de la base MySQL et des fichiers uploadés (`storage/app/public`). Si vous utilisez des files d’attente ou des notifications par mail, lancez un worker : `php artisan queue:work` (tables `jobs` / `failed_jobs` présentes).
+
+**Étudiants sans groupe** : un étudiant non affecté à un groupe (`group_id` vide) voit un emploi du temps et des statistiques de séances vides jusqu’à affectation par un administrateur.
 
 ## 🧪 Tests
 
@@ -192,18 +201,9 @@ php artisan test
 php artisan test --coverage
 ```
 
-## 📝 API Documentation
+## Routes
 
-Les routes API principales :
-
-```
-GET    /api/users              # Liste des utilisateurs (Admin)
-POST   /api/attendance         # Enregistrer présence (Teacher)
-GET    /api/absences/{user}    # Absences d'un utilisateur (Student)
-POST   /api/justifications     # Soumettre justification (Student)
-```
-
-
+L’application est exposée via **routes web** uniquement (pas d’API REST dédiée dans ce dépôt). Voir [`routes/web.php`](routes/web.php) pour les préfixes `admin`, `teacher` et `student`.
 
 ## 📄 Licence
 
